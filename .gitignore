@@ -40,7 +40,7 @@ data/
 
 # Logs
 *.log
-logs/
+logs/*.log
 test_output.log
 
 # Process IDs
