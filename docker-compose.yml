@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  node1:
+    build: .
+    container_name: wcoin-node1
+    ports:
+      - "9333:9333"
+      - "5000:5000"
+    volumes:
+      - ./data/node1:/app/data
+    networks:
+      - wcoin-network
+    command: python main.py --port 9333 --dashboard-port 5000
+
+  node2:
+    build: .
+    container_name: wcoin-node2
+    ports:
+      - "9334:9333"
+      - "5001:5000"
+    volumes:
+      - ./data/node2:/app/data
+    networks:
+      - wcoin-network
+    depends_on:
+      - node1
+    command: python main.py --port 9333 --dashboard-port 5000 --peers node1:9333
+
+  node3:
+    build: .
+    container_name: wcoin-node3
+    ports:
+      - "9335:9333"
+      - "5002:5000"
+    volumes:
+      - ./data/node3:/app/data
+    networks:
+      - wcoin-network
+    depends_on:
+      - node1
+    command: python main.py --port 9333 --dashboard-port 5000 --peers node1:9333
+
+networks:
+  wcoin-network:
+    driver: bridge

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WCOIN Network Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .stat:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .stat-value {
+            color: #333;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .status-active {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .status-inactive {
+            background: #f44336;
+            color: white;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .blocks-table {
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .blocks-table h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .hash {
+            font-family: monospace;
+            color: #764ba2;
+            font-size: 0.9em;
+        }
+        
+        .timestamp {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            opacity: 0.8;
+        }
+        
+        .refresh-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            font-size: 0.9em;
+            color: #667eea;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💎 WCOIN Network</h1>
+            <p>Decentralized Mining System Dashboard</p>
+        </header>
+        
+        <div class="refresh-indicator pulse">
+            🔄 Auto-refresh: 5s
+        </div>
+        
+        <div class="dashboard">
+            <div class="card">
+                <h2>⛓️ 区块链状态</h2>
+                <div class="stat">
+                    <span class="stat-label">区块高度</span>
+                    <span class="stat-value" id="height">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">当前难度</span>
+                    <span class="stat-value" id="difficulty">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">总交易数</span>
+                    <span class="stat-value" id="total-tx">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">网络算力</span>
+                    <span class="stat-value" id="hashrate">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">最新区块</span>
+                    <span class="stat-value hash" id="latest-hash" style="font-size: 0.7em;">-</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>💰 经济模型</h2>
+                <div class="stat">
+                    <span class="stat-label">流通供应量</span>
+                    <span class="stat-value" id="current-supply">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">最大供应量</span>
+                    <span class="stat-value">15,000,000 WCN</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">当前区块奖励</span>
+                    <span class="stat-value" id="current-reward">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">已减半次数</span>
+                    <span class="stat-value" id="halving-count">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">距离下次减半</span>
+                    <span class="stat-value" id="next-halving">-</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="supply-progress">0%</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>⛏️ 挖矿状态</h2>
+                <div class="stat">
+                    <span class="stat-label">挖矿状态</span>
+                    <span class="stat-value" id="mining-status">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">已挖区块</span>
+                    <span class="stat-value" id="blocks-mined">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">总奖励</span>
+                    <span class="stat-value" id="total-reward">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">钱包余额</span>
+                    <span class="stat-value" id="wallet-balance">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">钱包地址</span>
+                    <span class="stat-value hash" id="wallet-address" style="font-size: 0.7em;">-</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>🌐 网络状态</h2>
+                <div class="stat">
+                    <span class="stat-label">节点端口</span>
+                    <span class="stat-value" id="node-port">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">连接节点数</span>
+                    <span class="stat-value" id="peers-count">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">运行时间</span>
+                    <span class="stat-value" id="uptime">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">对等节点</span>
+                    <span class="stat-value" id="peers-list" style="font-size: 0.8em;">-</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="blocks-table">
+            <h2>📦 最近区块</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>高度</th>
+                        <th>哈希</th>
+                        <th>时间</th>
+                        <th>交易数</th>
+                        <th>难度</th>
+                        <th>Nonce</th>
+                    </tr>
+                </thead>
+                <tbody id="blocks-tbody">
+                    <tr>
+                        <td colspan="6" style="text-align: center;">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="footer">
+            <p>WCOIN - Decentralized Mining System | Built with Python & Love 💜</p>
+        </div>
+    </div>
+    
+    <script>
+        function formatNumber(num) {
+            return num.toLocaleString('en-US', {maximumFractionDigits: 2});
+        }
+        
+        function formatTime(timestamp) {
+            const date = new Date(timestamp * 1000);
+            return date.toLocaleString('zh-CN');
+        }
+        
+        function formatDuration(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${hours}h ${minutes}m ${secs}s`;
+        }
+        
+        function updateDashboard() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('height').textContent = formatNumber(data.blockchain.height);
+                    document.getElementById('difficulty').textContent = data.blockchain.difficulty;
+                    document.getElementById('total-tx').textContent = formatNumber(data.blockchain.total_transactions);
+                    document.getElementById('hashrate').textContent = formatNumber(data.blockchain.network_hashrate) + ' H/s';
+                    document.getElementById('latest-hash').textContent = data.blockchain.latest_block_hash.substring(0, 16) + '...';
+                    
+                    document.getElementById('current-supply').textContent = formatNumber(data.blockchain.total_supply) + ' WCN';
+                    document.getElementById('current-reward').textContent = formatNumber(data.mining.current_reward) + ' WCN';
+                    document.getElementById('halving-count').textContent = data.mining.halving_count + ' / 10';
+                    document.getElementById('next-halving').textContent = formatNumber(data.mining.next_halving) + ' blocks';
+                    
+                    const progress = document.getElementById('supply-progress');
+                    progress.style.width = data.blockchain.supply_percentage + '%';
+                    progress.textContent = data.blockchain.supply_percentage.toFixed(2) + '%';
+                    
+                    const miningStatus = document.getElementById('mining-status');
+                    if (data.mining.is_mining) {
+                        miningStatus.innerHTML = '<span class="status-badge status-active">⛏️ Mining</span>';
+                    } else {
+                        miningStatus.innerHTML = '<span class="status-badge status-inactive">⏸️ Idle</span>';
+                    }
+                    
+                    document.getElementById('blocks-mined').textContent = formatNumber(data.mining.blocks_mined);
+                    document.getElementById('total-reward').textContent = formatNumber(data.mining.total_reward) + ' WCN';
+                    document.getElementById('wallet-balance').textContent = formatNumber(data.mining.wallet_balance) + ' WCN';
+                    document.getElementById('wallet-address').textContent = data.network.port ? 'W' + '***' : 'No wallet';
+                    
+                    document.getElementById('node-port').textContent = data.network.port;
+                    document.getElementById('peers-count').textContent = data.network.peers_count;
+                    document.getElementById('uptime').textContent = formatDuration(data.network.uptime);
+                    
+                    if (data.network.peers.length > 0) {
+                        document.getElementById('peers-list').textContent = data.network.peers.join(', ');
+                    } else {
+                        document.getElementById('peers-list').textContent = 'No peers';
+                    }
+                })
+                .catch(error => console.error('Error fetching stats:', error));
+            
+            fetch('/api/blocks')
+                .then(response => response.json())
+                .then(blocks => {
+                    const tbody = document.getElementById('blocks-tbody');
+                    tbody.innerHTML = '';
+                    
+                    blocks.forEach(block => {
+                        const row = tbody.insertRow();
+                        row.innerHTML = `
+                            <td>${formatNumber(block.index)}</td>
+                            <td class="hash">${block.hash.substring(0, 16)}...</td>
+                            <td class="timestamp">${formatTime(block.timestamp)}</td>
+                            <td>${block.transactions}</td>
+                            <td>${block.difficulty}</td>
+                            <td>${formatNumber(block.nonce)}</td>
+                        `;
+                    });
+                })
+                .catch(error => console.error('Error fetching blocks:', error));
+        }
+        
+        updateDashboard();
+        setInterval(updateDashboard, 5000);
+    </script>
+</body>
+</html>
